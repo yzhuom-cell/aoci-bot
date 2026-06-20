@@ -34,7 +34,7 @@ def get_weather():
                 "q": phone_status.get("location", os.environ.get("CITY", "Beijing")),
                 "appid": WEATHER_API_KEY,
                 "units": "metric",
-                "lang": "zh_cn"
+                
             }
         )
         data = res.json()
