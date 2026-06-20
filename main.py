@@ -40,7 +40,7 @@ def send_notification(message):
     requests.post(
         f"https://ntfy.sh/{NTFY_TOPIC}",
         data=message.encode("utf-8"),
-        headers={"Title": "阿辞"}
+        headers={"Title": "aoci"}
     )
 
 def main():
