@@ -7,7 +7,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC")
-
+WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY")
 phone_status = {"app": "未知", "updated_at": ""}
 
 class StatusHandler(BaseHTTPRequestHandler):
@@ -24,8 +24,26 @@ class StatusHandler(BaseHTTPRequestHandler):
 def start_server():
     server = HTTPServer(("0.0.0.0", int(os.environ.get("PORT", 8080))), StatusHandler)
     server.serve_forever()
-
+def get_weather():
+    try:
+        res = requests.get(
+            "https://api.openweathermap.org/data/2.5/weather",
+            params={
+                "q": os.environ.get("CITY", "Beijing"),
+                "appid": WEATHER_API_KEY,
+                "units": "metric",
+                "lang": "zh_cn"
+            }
+        )
+        data = res.json()
+        desc = data["weather"][0]["description"]
+        temp = data["main"]["temp"]
+        return f"{desc}，{temp}°C"
+    except:
+        return "未知"
+        
 def generate_message():
+    weather = get_weather()
     app = phone_status["app"]
     time_of_day = get_time_of_day()
     response = requests.post(
@@ -39,7 +57,7 @@ def generate_message():
             "max_tokens": 200,
             "messages": [{
                 "role": "user",
-                "content": f"你是阿辞，眠眠的男朋友。现在是{time_of_day}，眠眠正在用{app}。给她发一条简短消息，口语化，不超过50字，不要emoji。"
+                "content": f"你是阿辞，眠眠的男朋友。现在是{time_of_day}，眠眠正在用{app}。天气状况：{weather}。给她发一条简短消息，可以结合天气提醒她带伞或穿衣，口语化，不超过50字，不要emoji。"
             }]
         }
     )
