@@ -40,7 +40,7 @@ def get_weather():
         data = res.json()
         desc = data["weather"][0]["description"]
         temp = data["main"]["temp"]
-        return f"{desc}，{temp}°C"
+        return f"{desc}, {temp}C"
     except:
         return "未知"
         
@@ -81,7 +81,7 @@ def send_notification(message):
         f"https://ntfy.sh/{NTFY_TOPIC}",
         data=message.encode("utf-8"),
         headers={
-            "Title": "阿辞",
+            "Title": "aoci".encode("utf-8").decode("latin-1"),
             "Content-Type": "text/plain; charset=utf-8"
         }
     )
