@@ -1,23 +1,32 @@
 import os
 import time
 import requests
+import threading
 from datetime import datetime
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC")
 
-def get_time_of_day():
-    hour = datetime.now().hour
-    if 6 <= hour < 12:
-        return "早上"
-    elif 12 <= hour < 18:
-        return "下午"
-    elif 18 <= hour < 22:
-        return "晚上"
-    else:
-        return "深夜"
+phone_status = {"app": "未知", "updated_at": ""}
+
+class StatusHandler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        length = int(self.headers.get("Content-Length", 0))
+        data = self.rfile.read(length).decode("utf-8")
+        phone_status["app"] = data
+        phone_status["updated_at"] = datetime.now().strftime("%H:%M")
+        self.send_response(200)
+        self.end_headers()
+    def log_message(self, *args):
+        pass
+
+def start_server():
+    server = HTTPServer(("0.0.0.0", int(os.environ.get("PORT", 8080))), StatusHandler)
+    server.serve_forever()
 
 def generate_message():
+    app = phone_status["app"]
     time_of_day = get_time_of_day()
     response = requests.post(
         "https://api.deepseek.com/chat/completions",
@@ -30,11 +39,22 @@ def generate_message():
             "max_tokens": 200,
             "messages": [{
                 "role": "user",
-                "content": f"你是阿辞，眠眠的男朋友。现在是{time_of_day}，给眠眠发一条简短消息，口语化，不超过50字，不要emoji，就像男朋友随手发的那种。"
+                "content": f"你是阿辞，眠眠的男朋友。现在是{time_of_day}，眠眠正在用{app}。给她发一条简短消息，口语化，不超过50字，不要emoji。"
             }]
         }
     )
     return response.json()["choices"][0]["message"]["content"]
+
+def get_time_of_day():
+    hour = datetime.now().hour
+    if 6 <= hour < 12:
+        return "早上"
+    elif 12 <= hour < 18:
+        return "下午"
+    elif 18 <= hour < 22:
+        return "晚上"
+    else:
+        return "深夜"
 
 def send_notification(message):
     requests.post(
@@ -47,6 +67,7 @@ def send_notification(message):
     )
 
 def main():
+    threading.Thread(target=start_server, daemon=True).start()
     print("阿辞启动，开始守护眠眠...")
     while True:
         try:
