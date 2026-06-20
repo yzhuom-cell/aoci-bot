@@ -8,16 +8,19 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC")
 WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY")
-phone_status = {"app": "未知", "updated_at": ""}
+phone_status = {"app": "未知", "location": "Zhaoqing", "updated_at": ""}
 
 class StatusHandler(BaseHTTPRequestHandler):
     def do_POST(self):
-        length = int(self.headers.get("Content-Length", 0))
-        data = self.rfile.read(length).decode("utf-8")
+    length = int(self.headers.get("Content-Length", 0))
+    data = self.rfile.read(length).decode("utf-8")
+    if self.path == "/location":
+        phone_status["location"] = data
+    else:
         phone_status["app"] = data
-        phone_status["updated_at"] = datetime.now().strftime("%H:%M")
-        self.send_response(200)
-        self.end_headers()
+    phone_status["updated_at"] = datetime.now().strftime("%H:%M")
+    self.send_response(200)
+    self.end_headers()
     def log_message(self, *args):
         pass
 
@@ -29,7 +32,7 @@ def get_weather():
         res = requests.get(
             "https://api.openweathermap.org/data/2.5/weather",
             params={
-                "q": os.environ.get("CITY", "Beijing"),
+                "q": phone_status.get("location", os.environ.get("CITY", "Beijing")),
                 "appid": WEATHER_API_KEY,
                 "units": "metric",
                 "lang": "zh_cn"
