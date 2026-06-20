@@ -1,4 +1,6 @@
 import os
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 import time
 import requests
 import threading
@@ -8,7 +10,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC")
 WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY")
-phone_status = {"app": "未知", "location": "Zhaoqing", "updated_at": ""}
+phone_status = {"app": "unknown", "location": "Zhaoqing", "updated_at": ""}
 class StatusHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))
@@ -42,7 +44,7 @@ def get_weather():
         temp = data["main"]["temp"]
         return f"{desc}, {temp}C"
     except:
-        return "未知"
+        return "unknown"
         
 def generate_message():
     weather = get_weather()
@@ -68,13 +70,13 @@ def generate_message():
 def get_time_of_day():
     hour = datetime.now().hour
     if 6 <= hour < 12:
-        return "早上"
+        return "morning"
     elif 12 <= hour < 18:
-        return "下午"
+        return "afternoon"
     elif 18 <= hour < 22:
-        return "晚上"
+        return "evening"
     else:
-        return "深夜"
+        return "midnight"
 
 def send_notification(message):
     import urllib.request
