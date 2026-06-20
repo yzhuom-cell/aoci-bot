@@ -3,7 +3,7 @@ import time
 import requests
 from datetime import datetime
 
-CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY")
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC")
 
 def get_time_of_day():
@@ -20,14 +20,13 @@ def get_time_of_day():
 def generate_message():
     time_of_day = get_time_of_day()
     response = requests.post(
-        "https://api.anthropic.com/v1/messages",
+        "https://api.deepseek.com/chat/completions",
         headers={
-            "x-api-key": CLAUDE_API_KEY,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json"
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "Content-Type": "application/json"
         },
         json={
-            "model": "claude-sonnet-4-6",
+            "model": "deepseek-chat",
             "max_tokens": 200,
             "messages": [{
                 "role": "user",
@@ -35,7 +34,7 @@ def generate_message():
             }]
         }
     )
-    return response.json()["content"][0]["text"]
+    return response.json()["choices"][0]["message"]["content"]
 
 def send_notification(message):
     requests.post(
