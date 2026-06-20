@@ -96,9 +96,9 @@ def main():
         try:
             msg = generate_message()
             send_notification(msg)
-            print(f"发送: {msg}")
+            print(f"sent: {msg}")
         except Exception as e:
-            print(f"出错: {e}")
+            print(f"error: {e}")
         hour = datetime.now().hour
         interval = 90*60 if (hour >= 22 or hour < 7) else 60*60
         time.sleep(interval)
