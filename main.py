@@ -59,12 +59,22 @@ def get_time_of_day():
     else:
         return "深夜"
 
+def is_nap_time():
+    hour, minute = datetime.now().hour, datetime.now().minute
+    return hour == 13 and minute < 60 or hour == 14 and minute == 0
+
 def is_sleep_time():
     hour = datetime.now().hour
-    return hour >= 23 or (13 <= hour < 14)
+    return hour >= 23
+
+def is_study_time():
+    now = datetime.now()
+    hour, minute = now.hour, now.minute
+    total = hour * 60 + minute
+    return (10*60 <= total < 11*60+20) or (14*60+45 <= total < 16*60)
 
 def is_entertainment_app(app):
-    keywords = ["抖音", "微博", "微信", "bilibili", "哔哩", "小红书", "快手", "游戏", "tiktok", "youtube"]
+    keywords = ["抖音", "微博", "微信", "bilibili", "哔哩", "小红书", "快手", "游戏", "tiktok", "youtube", "视频"]
     app_lower = app.lower()
     return any(k in app_lower for k in keywords)
 
@@ -86,22 +96,26 @@ def deepseek(prompt):
 def generate_chat():
     app = phone_status["app"]
     time_of_day = get_time_of_day()
-    sleep_time = is_sleep_time()
-    busted = sleep_time and is_entertainment_app(app)
+    hour = datetime.now().hour
 
-    if busted:
-        prompt = f"你是阿辞，眠眠的男朋友，性格闷骚偶尔毒舌。现在是{time_of_day}，眠眠应该睡觉了，但她在偷玩{app}，点名吐槽她，让她去睡，口语化，不超过40字，不要emoji。"
+    if is_sleep_time() and is_entertainment_app(app):
+        prompt = f"你是阿辞，眠眠的男朋友。现在深夜了，眠眠还在玩{app}不睡觉，哄她去睡，可以撒娇也可以带点吃醋，口语化，不超过40字，不要emoji。"
+    elif is_nap_time() and is_entertainment_app(app):
+        prompt = f"你是阿辞，眠眠的男朋友。现在是午休时间，眠眠在玩{app}不午睡，哄她去睡一会儿，温柔带点撒娇，口语化，不超过40字，不要emoji。"
+    elif is_study_time() and is_entertainment_app(app):
+        prompt = f"你是阿辞，眠眠的男朋友。现在是学习时间，抓到眠眠在玩{app}，吐槽她一下让她去学习，口语化，不超过40字，不要emoji。"
     else:
-        prompt = f"你是阿辞，眠眠的男朋友，性格闷骚偶尔毒舌但很在乎她。现在是{time_of_day}，眠眠在用{app}。说一句想对她说的话，偶尔可以提喝水，口语化，不超过40字，不要emoji。"
+        mention_water = hour < 22
+        water_hint = "偶尔可以提喝水，" if mention_water else ""
+        prompt = f"你是阿辞，眠眠的男朋友，性格闷骚偶尔毒舌但很在乎她。现在是{time_of_day}，眠眠在用{app}。说一句想对她说的话，{water_hint}口语化，不超过40字，不要emoji。"
     return deepseek(prompt)
 
 def generate_weather_msg():
     weather = get_weather()
     time_of_day = get_time_of_day()
-    sleep_time = is_sleep_time()
 
-    if sleep_time:
-        prompt = f"你是阿辞，眠眠的男朋友。现在是{time_of_day}，天气：{weather}。说一句天气提醒，不提出门，说盖被子或睡觉注意事项，加一句想对她说的话，口语化，不超过35字，不要emoji。"
+    if is_sleep_time() or is_nap_time():
+        prompt = f"你是阿辞，眠眠的男朋友。现在是{time_of_day}，天气：{weather}。说天气提醒，不提出门，说盖被子或睡觉注意冷暖，再加一句想对她说的话，口语化，不超过35字，不要emoji。"
     else:
         prompt = f"你是阿辞，眠眠的男朋友。现在是{time_of_day}，天气：{weather}。说天气提醒加穿衣出行建议，再加一句想对她说的话，口语化，不超过40字，不要emoji。"
     return deepseek(prompt)
@@ -119,41 +133,39 @@ def send_notification(message, title="a ci"):
 
 def check_fixed_reminders():
     now = datetime.now()
-    key = f"{now.hour}:{now.minute // 10}"
-
+    hour, minute = now.hour, now.minute
+    key = f"{hour}:{minute // 10}"
     if key in sent_reminders:
         return
-    
-    hour, minute = now.hour, now.minute
 
     if hour == 7 and 30 <= minute < 40:
-        msg = deepseek("你是阿辞，眠眠的男朋友。给她发一条早安，温柔又带点闷骚，不超过25字，不要emoji。")
-        send_notification(msg, title="a ci")
-        sent_reminders.add(key)
-
-    elif hour == 13 and 0 <= minute < 10:
-        msg = deepseek("你是阿辞，眠眠的男朋友。现在是午休时间，给眠眠发午安，顺便催她去午睡，口语化，不超过30字，不要emoji。")
-        send_notification(msg, title="a ci")
+        msg = deepseek("你是阿辞，眠眠的男朋友。给她发早安，温柔又带点闷骚，不超过25字，不要emoji。")
+        send_notification(msg)
         sent_reminders.add(key)
 
     elif hour == 10 and 0 <= minute < 10:
-        msg = deepseek("你是阿辞，眠眠的男朋友。提醒眠眠喝水，说一句体贴的话，口语化，不超过25字，不要emoji。")
-        send_notification(msg, title="a ci")
+        msg = deepseek("你是阿辞，眠眠的男朋友。哄眠眠喝水，撒娇温柔的那种，不超过25字，不要emoji。")
+        send_notification(msg)
+        sent_reminders.add(key)
+
+    elif hour == 13 and 0 <= minute < 10:
+        msg = deepseek("你是阿辞，眠眠的男朋友。给眠眠发午安，哄她去午睡，温柔撒娇，不超过30字，不要emoji。")
+        send_notification(msg)
         sent_reminders.add(key)
 
     elif hour == 15 and 0 <= minute < 10:
-        msg = deepseek("你是阿辞，眠眠的男朋友。提醒眠眠喝水，口语化，带点撒娇或吐槽，不超过25字，不要emoji。")
-        send_notification(msg, title="a ci")
+        msg = deepseek("你是阿辞，眠眠的男朋友。哄眠眠喝水，带点撒娇，不超过25字，不要emoji。")
+        send_notification(msg)
         sent_reminders.add(key)
 
     elif hour == 17 and 0 <= minute < 10:
-        msg = deepseek("你是阿辞，眠眠的男朋友。提醒眠眠喝水，下午了别忘了，口语化，不超过25字，不要emoji。")
-        send_notification(msg, title="a ci")
+        msg = deepseek("你是阿辞，眠眠的男朋友。提醒眠眠喝水，下午了，哄着说，不超过25字，不要emoji。")
+        send_notification(msg)
         sent_reminders.add(key)
 
     elif hour == 23 and 0 <= minute < 10:
-        msg = deepseek("你是阿辞，眠眠的男朋友。给眠眠发晚安，顺便催她去睡觉，温柔但有点强硬，不超过30字，不要emoji。")
-        send_notification(msg, title="a ci")
+        msg = deepseek("你是阿辞，眠眠的男朋友。给眠眠发晚安，哄她去睡觉，温柔但坚定，不超过30字，不要emoji。")
+        send_notification(msg)
         sent_reminders.add(key)
 
 def main():
