@@ -53,7 +53,7 @@ def main():
         except Exception as e:
             print(f"出错: {e}")
         hour = datetime.now().hour
-        interval = 90*60 if (hour >= 22 or hour < 7) else 15*60
+        interval = 90*60 if (hour >= 22 or hour < 7) else 60*60
         time.sleep(interval)
 
 if __name__ == "__main__":
