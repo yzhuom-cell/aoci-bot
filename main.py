@@ -89,7 +89,7 @@ def send_notification(message):
 
 def main():
     threading.Thread(target=start_server, daemon=True).start()
-    print("阿辞启动，开始守护眠眠...")
+    print("aoci bot starting...")
     while True:
         try:
             msg = generate_message()
