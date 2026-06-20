@@ -81,7 +81,7 @@ def send_notification(message):
         f"https://ntfy.sh/{NTFY_TOPIC}",
         data=message.encode("utf-8"),
         headers={
-            "Title": "aoci".encode("utf-8").decode("latin-1"),
+            "Title": "\u963f\u8f9e",
             "Content-Type": "text/plain; charset=utf-8"
         }
     )
