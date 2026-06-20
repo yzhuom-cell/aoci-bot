@@ -11,6 +11,7 @@ DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC")
 WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY")
 phone_status = {"app": "unknown", "location": "Zhaoqing", "updated_at": ""}
+
 class StatusHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))
@@ -28,6 +29,7 @@ class StatusHandler(BaseHTTPRequestHandler):
 def start_server():
     server = HTTPServer(("0.0.0.0", int(os.environ.get("PORT", 8080))), StatusHandler)
     server.serve_forever()
+
 def get_weather():
     try:
         res = requests.get(
@@ -36,7 +38,6 @@ def get_weather():
                 "q": phone_status.get("location", os.environ.get("CITY", "Beijing")),
                 "appid": WEATHER_API_KEY,
                 "units": "metric",
-                
             }
         )
         data = res.json()
@@ -45,9 +46,8 @@ def get_weather():
         return f"{desc}, {temp}C"
     except:
         return "unknown"
-        
-def generate_message():
-    weather = get_weather()
+
+def generate_chat():
     app = phone_status["app"]
     time_of_day = get_time_of_day()
     response = requests.post(
@@ -61,7 +61,26 @@ def generate_message():
             "max_tokens": 200,
             "messages": [{
                 "role": "user",
-                "content": f"你是阿辞，眠眠的男朋友。现在是{time_of_day}，眠眠正在用{app}。天气状况：{weather}。给她发一条简短消息，可以结合天气提醒她带伞或穿衣，口语化，不超过50字，不要emoji。"
+                "content": f"你是阿辞，眠眠的男朋友。现在是{time_of_day}，眠眠正在用{app}。给她发一条简短的体贴的话，口语化，不超过40字，不要emoji。"
+            }]
+        }
+    )
+    return response.json()["choices"][0]["message"]["content"]
+
+def generate_weather_msg():
+    weather = get_weather()
+    response = requests.post(
+        "https://api.deepseek.com/chat/completions",
+        headers={
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": "deepseek-chat",
+            "max_tokens": 100,
+            "messages": [{
+                "role": "user",
+                "content": f"你是阿辞，眠眠的男朋友。天气状况：{weather}。结合天气给眠眠一条穿衣或出行提醒，口语化，不超过30字，不要emoji。"
             }]
         }
     )
@@ -78,25 +97,32 @@ def get_time_of_day():
     else:
         return "midnight"
 
-def send_notification(message):
+def send_notification(message, title="a ci"):
     import urllib.request
     req = urllib.request.Request(
         f"https://ntfy.sh/{NTFY_TOPIC}",
         data=message.encode("utf-8"),
         method="POST"
     )
-    req.add_header("Title", "a ci")
+    req.add_header("Title", title)
     req.add_header("Content-Type", "text/plain; charset=utf-8")
     urllib.request.urlopen(req)
 
 def main():
     threading.Thread(target=start_server, daemon=True).start()
     print("aoci bot starting...")
+    weather_counter = 0
     while True:
         try:
-            msg = generate_message()
+            msg = generate_chat()
             send_notification(msg)
             print(f"sent: {msg}")
+            weather_counter += 1
+            if weather_counter >= 3:
+                weather_msg = generate_weather_msg()
+                send_notification(weather_msg, title="a ci - weather")
+                print(f"weather sent: {weather_msg}")
+                weather_counter = 0
         except Exception as e:
             print(f"error: {e}")
         hour = datetime.now().hour
