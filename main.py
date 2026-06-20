@@ -9,18 +9,17 @@ DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC")
 WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY")
 phone_status = {"app": "未知", "location": "Zhaoqing", "updated_at": ""}
-
 class StatusHandler(BaseHTTPRequestHandler):
     def do_POST(self):
-    length = int(self.headers.get("Content-Length", 0))
-    data = self.rfile.read(length).decode("utf-8")
-    if self.path == "/location":
-        phone_status["location"] = data
-    else:
-        phone_status["app"] = data
-    phone_status["updated_at"] = datetime.now().strftime("%H:%M")
-    self.send_response(200)
-    self.end_headers()
+        length = int(self.headers.get("Content-Length", 0))
+        data = self.rfile.read(length).decode("utf-8")
+        if self.path == "/location":
+            phone_status["location"] = data
+        else:
+            phone_status["app"] = data
+        phone_status["updated_at"] = datetime.now().strftime("%H:%M")
+        self.send_response(200)
+        self.end_headers()
     def log_message(self, *args):
         pass
 
