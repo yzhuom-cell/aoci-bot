@@ -168,22 +168,41 @@ def check_fixed_reminders():
         send_notification(msg)
         sent_reminders.add(key)
 
+last_chat_hour = -1
+last_busted_hour = -1
+
 def main():
     threading.Thread(target=start_server, daemon=True).start()
     print("aoci bot starting...")
+    global last_chat_hour, last_busted_hour
     weather_counter = 0
     while True:
         try:
+            now = datetime.now()
+            hour = now.hour
             check_fixed_reminders()
-            msg = generate_chat()
-            send_notification(msg)
-            print(f"sent: {msg}")
-            weather_counter += 1
-            if weather_counter >= 3:
-                weather_msg = generate_weather_msg()
-                send_notification(weather_msg, title="a ci - weather")
-                print(f"weather sent: {weather_msg}")
-                weather_counter = 0
+
+            app = phone_status["app"]
+            busted = (is_sleep_time() or is_nap_time() or is_study_time()) and is_entertainment_app(app)
+
+            if busted and (hour - last_busted_hour) >= 2:
+                msg = generate_chat()
+                send_notification(msg)
+                print(f"sent: {msg}")
+                last_busted_hour = hour
+
+            elif not busted and hour != last_chat_hour:
+                msg = generate_chat()
+                send_notification(msg)
+                print(f"sent: {msg}")
+                weather_counter += 1
+                if weather_counter >= 3:
+                    weather_msg = generate_weather_msg()
+                    send_notification(weather_msg, title="a ci - weather")
+                    print(f"weather sent: {weather_msg}")
+                    weather_counter = 0
+                last_chat_hour = hour
+
         except Exception as e:
             print(f"error: {e}")
         time.sleep(60)
