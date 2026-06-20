@@ -77,14 +77,15 @@ def get_time_of_day():
         return "深夜"
 
 def send_notification(message):
-    requests.post(
+    import urllib.request
+    req = urllib.request.Request(
         f"https://ntfy.sh/{NTFY_TOPIC}",
         data=message.encode("utf-8"),
-        headers={
-            "Title": "\u963f\u8f9e",
-            "Content-Type": "text/plain; charset=utf-8"
-        }
+        method="POST"
     )
+    req.add_header("Title", "\u963f\u8f9e")
+    req.add_header("Content-Type", "text/plain; charset=utf-8")
+    urllib.request.urlopen(req)
 
 def main():
     threading.Thread(target=start_server, daemon=True).start()
