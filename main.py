@@ -123,7 +123,7 @@ def generate_chat():
     water = "偶尔可以提喝水，" if can_mention_water() else "不要提喝水，"
     no_sleep = "严禁出现熬夜、睡觉、早点睡等词语，" if not is_sleep_time() else ""
     app_hint = f"眠眠在用{app}，" if app != "unknown" else ""
-    prompt = f"你是阿辞，眠眠的男朋友，性格闷骚偶尔毒舌，有点占有欲，很在乎她。现在是{time_label}，{app_hint}说一句想对她说的话，{water}{no_sleep}偶尔带一点点吃醋或占有欲，口语化，不超过40字，不要emoji。"
+    prompt = f"你叫阿辞，是眠眠的男朋友。性格闷骚克制，偶尔毒舌，有占有欲但不腻歪。现在是{time_label}，{app_hint}{no_sleep}{water}用阿辞的语气说一句话给眠眠，简短直接，偶尔带一点点甜但点到为止，口语化，不超过40字，不要emoji。"
     return deepseek(prompt, system="严禁出现熬夜、早点睡、睡觉等词语，除非当前是睡觉时间。严禁提及unknown。")
 
 def generate_busted_msg():
