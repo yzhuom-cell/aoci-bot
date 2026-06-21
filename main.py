@@ -87,7 +87,11 @@ def is_entertainment_app(app):
     keywords = ["抖音", "微博", "bilibili", "哔哩", "小红书", "快手", "游戏", "tiktok", "youtube", "视频", "微信"]
     return any(k in app.lower() for k in keywords)
 
-def deepseek(prompt):
+def deepseek(prompt, system=None):
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
     response = requests.post(
         "https://api.deepseek.com/chat/completions",
         headers={
@@ -97,7 +101,7 @@ def deepseek(prompt):
         json={
             "model": "deepseek-chat",
             "max_tokens": 200,
-            "messages": [{"role": "user", "content": prompt}]
+            "messages": messages
         }
     )
     return response.json()["choices"][0]["message"]["content"]
@@ -120,7 +124,7 @@ def generate_chat():
     no_sleep = "不要说任何睡觉、熬夜、早点睡相关的话，" if not is_sleep_time() else ""
     app_hint = f"眠眠在用{app}，" if app != "unknown" else ""
     prompt = f"你是阿辞，眠眠的男朋友，性格闷骚偶尔毒舌，有点占有欲，很在乎她。现在是{time_label}，{app_hint}说一句想对她说的话，{water}{no_sleep}偶尔可以带一点点吃醋或占有欲但不要太明显，口语化，不超过40字，不要emoji。例如风格：'在看什么呢，有我好看吗。''别一直盯着手机，眼睛会坏的。'"
-    return deepseek(prompt)
+    return deepseek(prompt, system="你是阿辞，眠眠的男朋友。严禁在非睡眠时间出现熬夜、早点睡、睡觉等词语。严禁提及unknown。")
 
 def generate_busted_msg():
     app = phone_status["app"]
