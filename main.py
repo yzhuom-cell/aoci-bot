@@ -84,7 +84,7 @@ def get_time_label():
         return "late night"
 
 def is_entertainment_app(app):
-    keywords = ["抖音", "微博", "bilibili", "哔哩", "小红书", "快手", "游戏", "tiktok", "youtube", "视频", "微信"]
+    keywords = ["抖音", "微博", "bilibili", "哔哩", "小红书", "快手", "游戏", "tiktok", "youtube", "视频", "微信", "xingin", "kwai", "douyin", "weibo"]
     return any(k in app.lower() for k in keywords)
 
 def deepseek(prompt, system=None):
