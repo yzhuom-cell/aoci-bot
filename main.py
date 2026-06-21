@@ -188,7 +188,7 @@ def main():
             check_fixed_reminders()
             app = phone_status["app"]
             busted = (is_nap_time() or is_night_time()) and is_entertainment_app(app)
-            if busted and (h - last_busted_hour) % 24 >= 2:
+            if busted and (h - last_busted_hour) % 24 >= 1:
                 msg = generate_busted_msg()
                 send_notification(msg)
                 print(f"busted: {msg}")
