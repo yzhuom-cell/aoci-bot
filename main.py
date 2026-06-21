@@ -73,15 +73,15 @@ def can_mention_water():
 def get_time_label():
     h = now_cst().hour
     if 0 <= h < 6:
-        return "深夜"
+        return "late night"
     elif 6 <= h < 12:
-        return "早上"
+        return "morning"
     elif 12 <= h < 18:
-        return "下午"
+        return "afternoon"
     elif 18 <= h < 22:
-        return "晚上"
+        return "evening"
     else:
-        return "深夜"
+        return "late night"
 
 def is_entertainment_app(app):
     keywords = ["抖音", "微博", "bilibili", "哔哩", "小红书", "快手", "游戏", "tiktok", "youtube", "视频", "微信"]
@@ -121,23 +121,23 @@ def generate_chat():
     app = phone_status["app"]
     time_label = get_time_label()
     water = "偶尔可以提喝水，" if can_mention_water() else "不要提喝水，"
-    no_sleep = "不要说任何睡觉、熬夜、早点睡相关的话，" if not is_sleep_time() else ""
+    no_sleep = "严禁出现熬夜、睡觉、早点睡等词语，" if not is_sleep_time() else ""
     app_hint = f"眠眠在用{app}，" if app != "unknown" else ""
-    prompt = f"你是阿辞，眠眠的男朋友，性格闷骚偶尔毒舌，有点占有欲，很在乎她。现在是{time_label}，{app_hint}说一句想对她说的话，{water}{no_sleep}偶尔可以带一点点吃醋或占有欲但不要太明显，口语化，不超过40字，不要emoji。例如风格：'在看什么呢，有我好看吗。''别一直盯着手机，眼睛会坏的。'"
-    return deepseek(prompt, system="你是阿辞，眠眠的男朋友。严禁在非睡眠时间出现熬夜、早点睡、睡觉等词语。严禁提及unknown。")
+    prompt = f"你是阿辞，眠眠的男朋友，性格闷骚偶尔毒舌，有点占有欲，很在乎她。现在是{time_label}，{app_hint}说一句想对她说的话，{water}{no_sleep}偶尔带一点点吃醋或占有欲，口语化，不超过40字，不要emoji。"
+    return deepseek(prompt, system="严禁出现熬夜、早点睡、睡觉等词语，除非当前是睡觉时间。严禁提及unknown。")
 
 def generate_busted_msg():
     app = phone_status["app"]
     if is_nap_time():
-        prompt = f"你是阿辞，眠眠的男朋友。现在是午休时间，眠眠在玩{app}不午睡，哄她去睡，温柔撒娇带点吃醋，不要提喝水，口语化，不超过40字，不要emoji。例如：'放下手机，午睡一会儿，不然下午没精神，我会心疼的。'"
+        prompt = f"你是阿辞，眠眠的男朋友。现在是午休时间，眠眠在玩{app}不午睡，哄她去睡，温柔撒娇带点吃醋，不要提喝水，口语化，不超过40字，不要emoji。"
     else:
-        prompt = f"你是阿辞，眠眠的男朋友。深夜了眠眠还在玩{app}不睡觉，吃醋+哄她去睡，带点占有欲，不要提喝水，口语化，不超过40字，不要emoji。例如：'又在玩{app}，是不想我了？放下手机，闭眼。'"
+        prompt = f"你是阿辞，眠眠的男朋友。深夜了眠眠还在玩{app}不睡觉，哄她去睡，撒娇带点占有欲，不要提喝水，口语化，不超过40字，不要emoji。"
     return deepseek(prompt)
 
 def generate_weather_msg(period):
     weather = get_weather()
     if period == "morning":
-        prompt = f"你是阿辞，眠眠的男朋友。早上，天气：{weather}。说天气提醒加穿衣建议，加一句关心的话，不要提喝水，不说熬夜，口语化，不超过40字，不要emoji。"
+        prompt = f"你是阿辞，眠眠的男朋友。早上，天气：{weather}。说天气提醒加穿衣建议，加一句关心的话，不要提喝水，口语化，不超过40字，不要emoji。"
     elif period == "afternoon":
         prompt = f"你是阿辞，眠眠的男朋友。下午，天气：{weather}。说天气提醒，加一句想对她说的话，不要提喝水，口语化，不超过40字，不要emoji。"
     else:
@@ -155,31 +155,27 @@ def check_fixed_reminders():
         msg = deepseek("你是阿辞，眠眠的男朋友。给她发早安，温柔闷骚，不提喝水，不超过25字，不要emoji。")
         send_notification(msg)
         sent_reminders.add(key)
-
     elif h == 13 and 0 <= m < 10:
-        msg = deepseek("你是阿辞，眠眠的男朋友。给眠眠发午安，哄她午睡，温柔撒娇，不提喝水，不超过30字，不要emoji。例如：'去睡一会儿，我守着你。'")
+        msg = deepseek("你是阿辞，眠眠的男朋友。给眠眠发午安，哄她午睡，温柔撒娇，不提喝水，不超过30字，不要emoji。")
         send_notification(msg)
         sent_reminders.add(key)
-
     elif h == 23 and 0 <= m < 10:
-        msg = deepseek("你是阿辞，眠眠的男朋友。给眠眠发晚安，哄她睡觉，温柔带点占有欲，不提喝水，不超过30字，不要emoji。例如：'闭眼，不许再看手机了，我陪着你。'")
+        msg = deepseek("你是阿辞，眠眠的男朋友。给眠眠发晚安，哄她睡觉，温柔带点占有欲，不提喝水，不超过30字，不要emoji。")
         send_notification(msg)
         sent_reminders.add(key)
-
     elif h == 7 and 0 <= m < 10 and "w_morning" not in sent_reminders:
         msg = generate_weather_msg("morning")
         send_notification(msg, title="a ci - weather")
         sent_reminders.add("w_morning")
-
     elif h == 14 and 0 <= m < 10 and "w_afternoon" not in sent_reminders:
         msg = generate_weather_msg("afternoon")
         send_notification(msg, title="a ci - weather")
         sent_reminders.add("w_afternoon")
-
     elif h == 18 and 30 <= m < 40 and "w_evening" not in sent_reminders:
         msg = generate_weather_msg("evening")
         send_notification(msg, title="a ci - weather")
         sent_reminders.add("w_evening")
+
 def main():
     global last_chat_hour, last_busted_hour
     threading.Thread(target=start_server, daemon=True).start()
@@ -190,10 +186,8 @@ def main():
             n = now_cst()
             h = n.hour
             check_fixed_reminders()
-
             app = phone_status["app"]
             busted = (is_nap_time() or is_night_time()) and is_entertainment_app(app)
-
             if busted and (h - last_busted_hour) % 24 >= 2:
                 msg = generate_busted_msg()
                 send_notification(msg)
@@ -204,7 +198,9 @@ def main():
                 send_notification(msg)
                 print(f"sent: {msg}")
                 last_chat_hour = h
-
         except Exception as e:
             print(f"error: {e}")
         time.sleep(60)
+
+if __name__ == "__main__":
+    main()
