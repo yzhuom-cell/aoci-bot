@@ -118,7 +118,8 @@ def generate_chat():
     time_label = get_time_label()
     water = "偶尔可以提喝水，" if can_mention_water() else "不要提喝水，"
     no_sleep = "不要说任何睡觉、熬夜、早点睡相关的话，" if not is_sleep_time() else ""
-    prompt = f"你是阿辞，眠眠的男朋友，性格闷骚偶尔毒舌，有点占有欲，很在乎她。现在是{time_label}，眠眠在用{app}。说一句想对她说的话，{water}{no_sleep}偶尔可以带一点点吃醋或占有欲但不要太明显，口语化，不超过40字，不要emoji。例如风格：'在看什么呢，有我好看吗。''别一直盯着手机，眼睛会坏的。'"
+    app_hint = f"眠眠在用{app}，" if app != "unknown" else ""
+    prompt = f"你是阿辞，眠眠的男朋友，性格闷骚偶尔毒舌，有点占有欲，很在乎她。现在是{time_label}，{app_hint}说一句想对她说的话，{water}{no_sleep}偶尔可以带一点点吃醋或占有欲但不要太明显，口语化，不超过40字，不要emoji。例如风格：'在看什么呢，有我好看吗。''别一直盯着手机，眼睛会坏的。'"
     return deepseek(prompt)
 
 def generate_busted_msg():
@@ -175,11 +176,11 @@ def check_fixed_reminders():
         msg = generate_weather_msg("evening")
         send_notification(msg, title="a ci - weather")
         sent_reminders.add("w_evening")
-
 def main():
     global last_chat_hour, last_busted_hour
     threading.Thread(target=start_server, daemon=True).start()
     print("aoci bot starting...")
+    last_chat_hour = now_cst().hour
     while True:
         try:
             n = now_cst()
@@ -203,6 +204,3 @@ def main():
         except Exception as e:
             print(f"error: {e}")
         time.sleep(60)
-
-if __name__ == "__main__":
-    main()
